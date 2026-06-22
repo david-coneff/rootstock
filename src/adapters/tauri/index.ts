@@ -18,6 +18,7 @@ import {
   NavigatorClipboard,
   DomDockingSystem,
   DomMenus,
+  ComponentRegistry,
 } from '../../core/impl/index.js';
 import { themeCatalogue, DEFAULT_THEME_ID } from '../../core/themes/catalogue.js';
 import { TauriWindowService } from './TauriWindowService.js';
@@ -78,6 +79,7 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
     commands,
     docking: new DomDockingSystem({ settings, window: windowService }),
     menus: new DomMenus(commands),
+    ui: new ComponentRegistry(),
     // Native, capability-backed subsystems.
     fs: new TauriFsService(),
     shell: new TauriShellService(),

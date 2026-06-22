@@ -9,3 +9,4 @@ export * from './command.js';
 export * from './shell.js';
 export * from './docking.js';
 export * from './menu.js';
+export * from './component.js';

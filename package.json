@@ -25,6 +25,10 @@
       "types": "./dist/tauri/index.d.ts",
       "import": "./dist/tauri/index.js"
     },
+    "./providers/material": {
+      "types": "./dist/providers/material/index.d.ts",
+      "import": "./dist/providers/material/index.js"
+    },
     "./styles.css": "./styles/rootstock.css"
   },
   "sideEffects": [
@@ -43,10 +47,14 @@
     "typescript": "^5.4.0"
   },
   "peerDependencies": {
-    "@tauri-apps/api": "^2.0.0"
+    "@tauri-apps/api": "^2.0.0",
+    "@material/web": "^2.0.0"
   },
   "peerDependenciesMeta": {
     "@tauri-apps/api": {
+      "optional": true
+    },
+    "@material/web": {
       "optional": true
     }
   }

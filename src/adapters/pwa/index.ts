@@ -66,6 +66,7 @@ export async function createPwaRootstock(options: PwaRootstockOptions = {}) {
     commands: services.commands,
     docking: services.docking,
     menus: services.menus,
+    ui: services.ui,
     fs: services.fs,
     shell: null,
   } satisfies PlatformAdapter;

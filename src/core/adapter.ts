@@ -11,6 +11,7 @@ import type {
   ShellService,
   DockingService,
   MenuService,
+  ComponentService,
 } from './services/index.js';
 
 /**
@@ -39,6 +40,7 @@ export interface PlatformAdapter {
   readonly commands: CommandService;
   readonly docking: DockingService;
   readonly menus: MenuService;
+  readonly ui: ComponentService;
 
   /** Non-null iff `capabilities.filesystem`. */
   readonly fs: FsService | null;

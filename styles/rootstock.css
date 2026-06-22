@@ -325,6 +325,41 @@
   overflow: auto;
 }
 
+/* Native ui controls (fallback provider) */
+.rootstock-control {
+  font: 13px/1.4 system-ui, sans-serif;
+  color: var(--rs-text);
+}
+.rootstock-button {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-surface-elevated);
+  cursor: pointer;
+}
+.rootstock-button-filled {
+  background: var(--rs-accent);
+  color: var(--rs-accent-text);
+  border-color: transparent;
+}
+.rootstock-button-text {
+  background: transparent;
+  border-color: transparent;
+}
+.rootstock-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.rootstock-textinput,
+.rootstock-select {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-surface-elevated);
+  color: var(--rs-text);
+}
+
 /* Splitter handle */
 .rootstock-splitter {
   flex: 0 0 auto;

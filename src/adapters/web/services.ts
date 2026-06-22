@@ -15,6 +15,7 @@ import {
   NavigatorClipboard,
   DomDockingSystem,
   DomMenus,
+  ComponentRegistry,
 } from '../../core/impl/index.js';
 import { WebWindowService } from './WebWindowService.js';
 import { WebFsService } from './WebFsService.js';
@@ -49,6 +50,7 @@ export function createWebServices(options: WebBuildOptions) {
     commands,
     docking: new DomDockingSystem({ settings, window: windowService }),
     menus: new DomMenus(commands),
+    ui: new ComponentRegistry(),
     fs: fsSupported ? new WebFsService() : null,
   };
 }

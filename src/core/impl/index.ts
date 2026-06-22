@@ -7,3 +7,5 @@ export { NavigatorClipboard } from './NavigatorClipboard.js';
 export { DomDockingSystem } from './DomDockingSystem.js';
 export { Splitter } from './Splitter.js';
 export { DomMenus } from './DomMenus.js';
+export { ComponentRegistry } from './ComponentRegistry.js';
+export { nativeProvider } from './nativeProvider.js';

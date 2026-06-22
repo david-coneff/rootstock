@@ -207,11 +207,39 @@ supports user editing — `register()`/`remove()` custom themes, `setOrder()`,
 and tessel's A/B toggle (`setSlot`, `toggleSlot`, `preview`/`endPreview`) — all
 persisted through settings.
 
+## Components (`ui`) — mix systems without lock-in
+
+`rootstock.ui` resolves logical controls (`button`, `toggle`, `slider`,
+`textInput`, `select`) through a provider chain, with native HTML as the
+always-available fallback. Scions register more providers (their own component
+library, Material) and pin per control:
+
+```ts
+const slider = rootstock.ui.slider({ min: 0, max: 10, value: 5, onInput });
+
+import { materialProvider, materialThemeBridge } from
+  '@david-coneff/rootstock/providers/material';
+rootstock.ui.use(materialProvider);
+rootstock.ui.prefer('slider', 'material');   // Material slider, native elsewhere
+materialThemeBridge(rootstock.theme);         // theme Material with the app
+```
+
+**Bundle cost is opt-in and granular.** Material lives behind the
+`@david-coneff/rootstock/providers/material` subpath and is the only module that
+references `@material/web` (an optional peer dependency). The core / web / pwa /
+tauri entries contain **zero** Material (verified). Within the provider each
+control is a *literal lazy `import()`*, so a scion that uses only the Material
+slider bundles only the Material slider's module (plus the shared Lit/internals
+floor, once) — never button/select/etc. A scion that never imports the provider
+ships no Material at all. Theming bridges automatically: `materialThemeBridge`
+emits `--md-sys-color-*` from the active rootstock theme.
+
 ## Status
 
 The capability **contract**, the **web / pwa / tauri adapters**, the **docking
 subsystem** (zones, floating drag/resize, tabbed pane groups, splitters, PiP +
 satellite pop-out, layout persistence), the **command palette + keybindings**,
-**menus**, and the **theme engine** (catalogue + user editing + A/B slots) are
-in place and type-checked. The contract surface is broad enough for a real scion
-to adopt — tessel is the first consumer.
+**menus**, the **theme engine** (catalogue + user editing + A/B slots), and the
+**component layer** (`ui` with native fallback + optional, lazy-per-control
+Material provider) are in place and type-checked. The contract surface is broad
+enough for a real scion to adopt — tessel is the first consumer.

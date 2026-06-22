@@ -6,6 +6,7 @@ export default defineConfig({
     'web/index': 'src/adapters/web/index.ts',
     'pwa/index': 'src/adapters/pwa/index.ts',
     'tauri/index': 'src/adapters/tauri/index.ts',
+    'providers/material/index': 'src/providers/material/index.ts',
   },
   format: ['esm'],
   target: 'es2022',
@@ -15,5 +16,5 @@ export default defineConfig({
   // Adapters reach platform APIs via peer deps; never bundle them. This is the
   // other half of the per-target story: the Tauri code stays out of any build
   // that doesn't import the tauri entry.
-  external: [/^@tauri-apps\//],
+  external: [/^@tauri-apps\//, /^@material\//],
 });

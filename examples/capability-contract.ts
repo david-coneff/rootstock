@@ -11,6 +11,7 @@ import { createWebRootstock } from '../src/adapters/web/index.js';
 import { createPwaRootstock } from '../src/adapters/pwa/index.js';
 import { createTauriRootstock } from '../src/adapters/tauri/index.js';
 import { Splitter } from '../src/index.js';
+import { materialProvider, materialThemeBridge } from '../src/providers/material/index.js';
 import type { Rootstock } from '../src/index.js';
 
 // --- Web build -------------------------------------------------------------
@@ -111,6 +112,20 @@ web.theme.setSlot('b', 'light');
 web.theme.toggleSlot(); // switch a↔b
 web.theme.preview('nord');
 web.theme.endPreview();
+
+// --- UI components: native by default, Material opt-in per control ----------
+// Native fallback — always available, no extra deps:
+const slider = web.ui.slider({ min: 0, max: 10, value: 5, onInput: () => undefined });
+const button = web.ui.button({ label: 'Run', variant: 'filled', onClick: () => undefined });
+void [slider, button];
+
+// Opt into Material for just the slider; everything else stays native. Only a
+// scion that imports the material provider bundles any Material (and only the
+// slider's Material module, loaded lazily on first use).
+web.ui.use(materialProvider);
+web.ui.prefer('slider', 'material');
+materialThemeBridge(web.theme); // theme Material with the active rootstock theme
+void web.ui.providers(); // ['material', 'native']
 
 // --- Target-agnostic library code -----------------------------------------
 // Code written against the wide `Rootstock` type must guard optional subsystems

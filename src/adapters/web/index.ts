@@ -55,6 +55,7 @@ export function createWebRootstock(options: WebRootstockOptions = {}) {
     commands: services.commands,
     docking: services.docking,
     menus: services.menus,
+    ui: services.ui,
     fs: services.fs,
     shell: null,
   } satisfies PlatformAdapter;
