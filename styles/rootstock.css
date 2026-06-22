@@ -1,0 +1,134 @@
+/* rootstock baseline styles.
+ *
+ * Themeable via CSS custom properties keyed off the document root's
+ * `data-theme` attribute / `.dark` class (set by the ThemeEngine). Scions may
+ * override these variables to restyle every rootstock surface at once. */
+
+:root {
+  --rs-surface: #ffffff;
+  --rs-surface-elevated: #f7f7f8;
+  --rs-text: #1c1c1e;
+  --rs-border: #d8d8dc;
+  --rs-accent: #2f6feb;
+  --rs-accent-text: #ffffff;
+  --rs-danger: #d23b3b;
+  --rs-overlay: rgba(0, 0, 0, 0.32);
+  --rs-radius: 8px;
+  --rs-shadow: 0 8px 30px rgba(0, 0, 0, 0.18);
+}
+
+:root.dark,
+:root[data-theme='dark'] {
+  --rs-surface: #1f1f23;
+  --rs-surface-elevated: #2a2a30;
+  --rs-text: #f2f2f4;
+  --rs-border: #3a3a42;
+  --rs-accent: #5b8dff;
+  --rs-accent-text: #0c1430;
+  --rs-danger: #ff6b6b;
+  --rs-overlay: rgba(0, 0, 0, 0.55);
+}
+
+/* Dialogs */
+.rootstock-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--rs-overlay);
+  z-index: 10000;
+}
+
+.rootstock-dialog {
+  min-width: 320px;
+  max-width: 480px;
+  padding: 20px;
+  background: var(--rs-surface);
+  color: var(--rs-text);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow);
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+.rootstock-dialog-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.rootstock-dialog-body {
+  white-space: pre-wrap;
+}
+
+.rootstock-dialog-input {
+  width: 100%;
+  margin-top: 12px;
+  padding: 8px 10px;
+  background: var(--rs-surface-elevated);
+  color: var(--rs-text);
+  border: 1px solid var(--rs-border);
+  border-radius: 6px;
+  box-sizing: border-box;
+}
+
+.rootstock-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.rootstock-dialog-btn {
+  padding: 7px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--rs-border);
+  background: var(--rs-surface-elevated);
+  color: var(--rs-text);
+  cursor: pointer;
+  font: inherit;
+}
+
+.rootstock-dialog-btn-ok {
+  background: var(--rs-accent);
+  color: var(--rs-accent-text);
+  border-color: transparent;
+}
+
+.rootstock-dialog-btn-danger {
+  background: var(--rs-danger);
+}
+
+/* Toasts */
+.rootstock-toasts {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 10001;
+}
+
+.rootstock-toast {
+  min-width: 240px;
+  max-width: 360px;
+  padding: 12px 14px;
+  background: var(--rs-surface);
+  color: var(--rs-text);
+  border: 1px solid var(--rs-border);
+  border-left: 3px solid var(--rs-accent);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow);
+  font: 13px/1.4 system-ui, sans-serif;
+}
+
+.rootstock-toast-success { border-left-color: #2faf5b; }
+.rootstock-toast-warning { border-left-color: #d99a2b; }
+.rootstock-toast-error { border-left-color: var(--rs-danger); }
+
+.rootstock-toast-title {
+  font-weight: 600;
+  margin-bottom: 2px;
+}
