@@ -34,6 +34,7 @@
     "build": "tsup",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
+    "prepare": "tsup",
     "prepublishOnly": "npm run build"
   },
   "devDependencies": {
