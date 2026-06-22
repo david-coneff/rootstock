@@ -4,6 +4,8 @@
  * `data-theme` attribute / `.dark` class (set by the ThemeEngine). Scions may
  * override these variables to restyle every rootstock surface at once. */
 
+@import url('./components.css');
+
 :root {
   --rs-surface: #ffffff;
   --rs-surface-elevated: #f7f7f8;

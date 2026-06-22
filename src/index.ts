@@ -21,6 +21,12 @@ export { detectTarget } from './core/detect.js';
 export { CapabilityError } from './core/errors.js';
 export { themeCatalogue, DEFAULT_THEME_ID } from './core/themes/catalogue.js';
 export { readSatelliteRequest, buildSatelliteUrl } from './core/docking-satellite.js';
+
+// Legacy API (vanilla JS classes)
 export { Splitter } from './core/impl/Splitter.js';
 export type { SplitterOptions } from './core/impl/Splitter.js';
+
+// Web components API
+export * from './core/components/index.js';
+
 export type { RootstockCore, RootstockFromAdapter } from './core/rootstock.js';
