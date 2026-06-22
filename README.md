@@ -111,6 +111,7 @@ export async function exportData(rs: Rootstock, data: string) {
 | Settings     | `settings`          | localStorage                | localStorage\*   |
 | Theme        | `theme`             | shared engine               | shared engine    |
 | Commands     | `commands`          | shared registry             | shared registry  |
+| Docking      | `docking`           | zones + PiP pop-out         | zones + PiP\*    |
 | Filesystem   | `fs` *(optional)*   | File System Access \| null  | native plugins   |
 | Shell        | `shell` *(optional)*| **absent**                  | native plugin    |
 
@@ -142,9 +143,28 @@ npm run typecheck   # tsc --noEmit (includes the contract proof)
 npm run build       # tsup → dist/ (per-target ESM + .d.ts)
 ```
 
+## Docking
+
+`rootstock.docking` is a first-class subsystem (present on every webview
+target). It manages where each pane lives — a dock zone (`left/right/top/
+bottom/center`), a floating rect, or a pop-out window — serializes that to a
+`WorkspaceLayout`, and auto-persists it through `settings`:
+
+```ts
+rootstock.docking.configure({ zones: { left: leftEl, right: rightEl } });
+rootstock.docking.register({ id: 'inspector', element: el, defaultZone: 'right' });
+rootstock.docking.dock('inspector', 'left');
+await rootstock.docking.popOut('inspector');   // Document Picture-in-Picture
+rootstock.docking.restorePersisted();           // reapply saved layout
+```
+
+The state core (registry, dock/float/pop-out transitions, serialize/restore,
+persistence) is implemented; tessel's `FloatingPane` drag/resize/splitters and
+URL-satellite pop-out are the next behaviors to lift in behind this interface.
+
 ## Status
 
-Early scaffold. The capability **contract** and the **web + tauri adapters**
-are in place and type-checked; richer subsystems from tessel (docking, floating
-panes, workspace persistence, command palette UI, menus) are the next layers to
-lift in behind these interfaces.
+Early scaffold. The capability **contract**, the **web / pwa / tauri adapters**,
+and the **docking state core** are in place and type-checked. Remaining lifts
+from tessel: floating-pane drag/resize, command-palette UI, menus, and richer
+theme catalogues.

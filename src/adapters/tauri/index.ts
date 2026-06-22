@@ -16,6 +16,7 @@ import {
   DomDialogs,
   DomNotifier,
   NavigatorClipboard,
+  DomDockingSystem,
 } from '../../core/impl/index.js';
 import { TauriWindowService } from './TauriWindowService.js';
 import { TauriFsService } from './TauriFsService.js';
@@ -59,6 +60,7 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
 
   // `satisfies` keeps the non-null `fs`/`shell` types so the Tauri surface
   // exposes them without a guard.
+  const settings = new LocalStorageSettings(options.settingsPrefix);
   const adapter = {
     target: 'tauri' as const,
     capabilities,
@@ -67,9 +69,10 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
     dialog: new DomDialogs(),
     notify: new DomNotifier(),
     clipboard: new NavigatorClipboard(),
-    settings: new LocalStorageSettings(options.settingsPrefix),
+    settings,
     theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme),
     commands: new CommandRegistry(),
+    docking: new DomDockingSystem({ settings }),
     // Native, capability-backed subsystems.
     fs: new TauriFsService(),
     shell: new TauriShellService(),

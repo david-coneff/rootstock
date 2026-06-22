@@ -12,6 +12,7 @@ import {
   DomDialogs,
   DomNotifier,
   NavigatorClipboard,
+  DomDockingSystem,
 } from '../../core/impl/index.js';
 import { WebWindowService } from './WebWindowService.js';
 import { WebFsService } from './WebFsService.js';
@@ -32,15 +33,17 @@ export const DEFAULT_THEMES: ThemeDescriptor[] = [
 /** The full browser service set, shared by `web` and `pwa`. */
 export function createWebServices(options: WebBuildOptions) {
   const fsSupported = WebFsService.isSupported();
+  const settings = new LocalStorageSettings(options.settingsPrefix);
   return {
     fsSupported,
     window: new WebWindowService(),
     dialog: new DomDialogs(),
     notify: new DomNotifier(),
     clipboard: new NavigatorClipboard(),
-    settings: new LocalStorageSettings(options.settingsPrefix),
+    settings,
     theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme),
     commands: new CommandRegistry(),
+    docking: new DomDockingSystem({ settings }),
     fs: fsSupported ? new WebFsService() : null,
   };
 }

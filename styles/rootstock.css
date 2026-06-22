@@ -132,3 +132,24 @@
   font-weight: 600;
   margin-bottom: 2px;
 }
+
+/* Docking — panes carry these classes; scions style the zone containers.
+ * The float class is applied by the docking system; geometry is set inline. */
+.rootstock-pane-float {
+  position: fixed;
+  z-index: 9000;
+  background: var(--rs-surface);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow);
+  overflow: hidden;
+}
+
+.rootstock-dock-left,
+.rootstock-dock-right,
+.rootstock-dock-top,
+.rootstock-dock-bottom,
+.rootstock-dock-center {
+  background: var(--rs-surface);
+  color: var(--rs-text);
+}

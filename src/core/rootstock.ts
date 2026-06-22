@@ -10,6 +10,7 @@ import type {
   ThemeService,
   CommandService,
   ShellService,
+  DockingService,
 } from './services/index.js';
 
 /**
@@ -25,6 +26,7 @@ export interface RootstockCore {
   readonly settings: SettingsService;
   readonly theme: ThemeService;
   readonly commands: CommandService;
+  readonly docking: DockingService;
 }
 
 /**
@@ -74,6 +76,7 @@ export function createRootstock<A extends PlatformAdapter>(adapter: A): Rootstoc
     settings: adapter.settings,
     theme: adapter.theme,
     commands: adapter.commands,
+    docking: adapter.docking,
     fs: adapter.fs,
     shell: adapter.shell,
   } as RootstockFromAdapter<A>;

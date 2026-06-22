@@ -9,6 +9,7 @@ import type {
   ThemeService,
   CommandService,
   ShellService,
+  DockingService,
 } from './services/index.js';
 
 /**
@@ -35,6 +36,7 @@ export interface PlatformAdapter {
   readonly settings: SettingsService;
   readonly theme: ThemeService;
   readonly commands: CommandService;
+  readonly docking: DockingService;
 
   /** Non-null iff `capabilities.filesystem`. */
   readonly fs: FsService | null;

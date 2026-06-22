@@ -1,5 +1,5 @@
 {
-  "name": "rootstock",
+  "name": "@david-coneff/rootstock",
   "version": "0.1.0",
   "description": "Cross-platform workbench runtime and capability abstraction layer for browser-based apps that also ship as desktop (Tauri/Electron).",
   "type": "module",

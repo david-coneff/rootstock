@@ -50,6 +50,15 @@ const tauri = createTauriRootstock();
 void tauri.fs.open();
 void tauri.shell.openExternal('https://example.com');
 
+// --- Docking subsystem (present on every target) ---------------------------
+const inspectorEl =
+  typeof document !== 'undefined' ? document.createElement('div') : ({} as HTMLElement);
+web.docking.register({ id: 'inspector', element: inspectorEl, defaultZone: 'right' });
+web.docking.dock('inspector', 'left');
+web.docking.float('inspector', { x: 120, y: 120 });
+const layout = web.docking.saveLayout(); // serializable workspace snapshot
+web.docking.loadLayout(layout);
+
 // --- Target-agnostic library code -----------------------------------------
 // Code written against the wide `Rootstock` type must guard optional subsystems
 // regardless of which build it ends up in.

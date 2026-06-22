@@ -7,3 +7,4 @@ export * from './settings.js';
 export * from './theme.js';
 export * from './command.js';
 export * from './shell.js';
+export * from './docking.js';
