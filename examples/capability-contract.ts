@@ -8,6 +8,7 @@
 // sources directly so the example is self-contained.
 
 import { createWebRootstock } from '../src/adapters/web/index.js';
+import { createPwaRootstock } from '../src/adapters/pwa/index.js';
 import { createTauriRootstock } from '../src/adapters/tauri/index.js';
 import type { Rootstock } from '../src/index.js';
 
@@ -29,6 +30,18 @@ if (web.fs) {
 // Always-present subsystems need no guard on any target.
 void web.dialog.confirm('Proceed?');
 void web.notify.show({ body: 'hello' });
+
+// --- PWA build (superset of web) -------------------------------------------
+const pwa = await createPwaRootstock({ serviceWorkerUrl: '/sw.js' });
+
+// Same browser surface as web: shell still absent, fs still guarded.
+// @ts-expect-error  PWA builds have no shell either
+pwa.shell.openExternal('https://example.com');
+if (pwa.fs) void pwa.fs.open();
+
+// ...but the extra delivery capabilities are visible and true.
+void pwa.platform.capabilities.offline;
+void pwa.platform.capabilities.installable;
 
 // --- Tauri build -----------------------------------------------------------
 const tauri = createTauriRootstock();

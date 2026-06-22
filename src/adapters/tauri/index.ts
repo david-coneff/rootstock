@@ -48,6 +48,13 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
     shellAccess: true,
     notifications: true,
     clipboard: true,
+    // Native webview: secure context, no service worker needed — the app is
+    // already installed and works offline against the native filesystem.
+    secureContext: true,
+    serviceWorker: false,
+    persistentStorage: true,
+    offline: true,
+    installable: false,
   };
 
   // `satisfies` keeps the non-null `fs`/`shell` types so the Tauri surface

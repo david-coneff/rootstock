@@ -4,6 +4,7 @@ export default defineConfig({
   entry: {
     index: 'src/index.ts',
     'web/index': 'src/adapters/web/index.ts',
+    'pwa/index': 'src/adapters/pwa/index.ts',
     'tauri/index': 'src/adapters/tauri/index.ts',
   },
   format: ['esm'],

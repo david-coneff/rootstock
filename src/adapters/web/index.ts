@@ -1,56 +1,44 @@
-// rootstock/web — Web & PWA adapter.
+// rootstock/web — standalone HTML / served browser adapter.
 //
-// Assembles a Rootstock from browser-native services plus the shared,
-// platform-agnostic subsystems (commands, theme, settings). Import this entry
-// from a browser/PWA build so no desktop adapter code is bundled.
+// The plain browser target: a single-file HTML build or a served page with no
+// service worker. Capabilities are *detected* (secure context, File System
+// Access), so the same entry behaves correctly whether opened from file:// or
+// served over https. The service-worker-driven extras (offline, persistent
+// storage, installability) are off — see rootstock/pwa for those.
 
 import { createRootstock } from '../../core/rootstock.js';
 import type { PlatformAdapter } from '../../core/adapter.js';
 import type { Capabilities } from '../../core/types.js';
-import type { ThemeDescriptor } from '../../core/services/theme.js';
-import {
-  CommandRegistry,
-  ThemeEngine,
-  LocalStorageSettings,
-  DomDialogs,
-  DomNotifier,
-  NavigatorClipboard,
-} from '../../core/impl/index.js';
-import { WebWindowService } from './WebWindowService.js';
-import { WebFsService } from './WebFsService.js';
+import { createWebServices, detectWebCapabilities, type WebBuildOptions } from './services.js';
 
-export interface WebRootstockOptions {
-  /** Theme catalogue. Defaults to a light/dark pair. */
-  themes?: ThemeDescriptor[];
-  initialTheme?: string;
-  /** localStorage namespace for settings. */
-  settingsPrefix?: string;
-}
-
-const DEFAULT_THEMES: ThemeDescriptor[] = [
-  { id: 'light', label: 'Light', dark: false },
-  { id: 'dark', label: 'Dark', dark: true },
-];
+export type WebRootstockOptions = WebBuildOptions;
 
 /**
- * The Web/PWA runtime surface. Note `shell` is typed `null` — a browser build
- * cannot reach a shell, and referencing `rootstock.shell.openExternal()` here
- * is a compile error. `fs` is `WebFsService | null` because File System Access
- * support is browser-dependent, so it must be guarded.
+ * The Web/standalone-HTML runtime surface. `shell` is typed `null` — a browser
+ * build cannot reach a shell, and referencing `rootstock.shell.openExternal()`
+ * here is a compile error. `fs` is `WebFsService | null` because File System
+ * Access support is context-dependent, so it must be guarded.
  */
 export type WebRootstock = ReturnType<typeof createWebRootstock>;
 
-/** Build the Web/PWA runtime. */
+/** Build the Web/standalone-HTML runtime. */
 export function createWebRootstock(options: WebRootstockOptions = {}) {
-  const fsSupported = WebFsService.isSupported();
+  const detected = detectWebCapabilities();
+  const services = createWebServices(options);
 
   const capabilities: Capabilities = {
-    popoutWindows: typeof window !== 'undefined' && typeof window.open === 'function',
+    popoutWindows: detected.popoutWindows,
     nativeDecorations: false,
-    filesystem: fsSupported,
+    filesystem: detected.filesystem,
     shellAccess: false,
-    notifications: true,
-    clipboard: typeof navigator !== 'undefined' && !!navigator.clipboard,
+    notifications: detected.notifications,
+    clipboard: detected.clipboard,
+    secureContext: detected.secureContext,
+    // No service worker in a plain web/standalone build.
+    serviceWorker: false,
+    persistentStorage: false,
+    offline: false,
+    installable: false,
   };
 
   // `satisfies` (not `: PlatformAdapter`) so the literal `shell: null` and
@@ -58,14 +46,14 @@ export function createWebRootstock(options: WebRootstockOptions = {}) {
   const adapter = {
     target: 'web' as const,
     capabilities,
-    window: new WebWindowService(),
-    dialog: new DomDialogs(),
-    notify: new DomNotifier(),
-    clipboard: new NavigatorClipboard(),
-    settings: new LocalStorageSettings(options.settingsPrefix),
-    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme),
-    commands: new CommandRegistry(),
-    fs: fsSupported ? new WebFsService() : null,
+    window: services.window,
+    dialog: services.dialog,
+    notify: services.notify,
+    clipboard: services.clipboard,
+    settings: services.settings,
+    theme: services.theme,
+    commands: services.commands,
+    fs: services.fs,
     shell: null,
   } satisfies PlatformAdapter;
 

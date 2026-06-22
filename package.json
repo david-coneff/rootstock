@@ -17,6 +17,10 @@
       "types": "./dist/web/index.d.ts",
       "import": "./dist/web/index.js"
     },
+    "./pwa": {
+      "types": "./dist/pwa/index.d.ts",
+      "import": "./dist/pwa/index.js"
+    },
     "./tauri": {
       "types": "./dist/tauri/index.d.ts",
       "import": "./dist/tauri/index.js"

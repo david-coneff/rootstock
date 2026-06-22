@@ -32,15 +32,27 @@ Two things make this safe across targets:
 1. **Per-target builds.** Import the entry for your target; nothing else is
    bundled. A browser build contains zero desktop code.
 
-   | Import            | Use                                |
-   | ----------------- | ---------------------------------- |
-   | `rootstock`       | Types + helpers only (no platform) |
-   | `rootstock/web`   | Web / PWA runtime                  |
-   | `rootstock/tauri` | Tauri desktop runtime              |
+   | Import            | Use                                          |
+   | ----------------- | -------------------------------------------- |
+   | `rootstock`       | Types + helpers only (no platform)           |
+   | `rootstock/web`   | Standalone HTML / served browser runtime     |
+   | `rootstock/pwa`   | Installable, offline runtime (superset of web) |
+   | `rootstock/tauri` | Tauri desktop runtime                        |
 
 2. **Per-target types.** Each build only exposes the capabilities its target can
    honor. Calling a desktop-only method from a browser build is a *compile
    error*, not a runtime surprise.
+
+### Web delivery: standalone HTML vs PWA
+
+`web` and `pwa` are separate entries because their *build* differs. `pwa` is a
+capability **superset**: it registers a service worker and requests persistent
+storage, enabling `offline`, `persistentStorage`, and `installable`. The finer
+cliffs *within* the browser — `secureContext`, `filesystem` (File System Access)
+— are **detected at runtime**, so a `web` build behaves correctly whether it's
+served over https or opened as a single file from `file://` (where, like
+tessel's own `StorageEngine`, secure-context APIs are unavailable). Read these
+off `rootstock.platform.capabilities` rather than assuming them from the target.
 
 ## Usage
 
