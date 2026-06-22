@@ -53,11 +53,35 @@ void tauri.shell.openExternal('https://example.com');
 // --- Docking subsystem (present on every target) ---------------------------
 const inspectorEl =
   typeof document !== 'undefined' ? document.createElement('div') : ({} as HTMLElement);
-web.docking.register({ id: 'inspector', element: inspectorEl, defaultZone: 'right' });
+web.docking.configure({ zones: {}, topOffset: 44 });
+web.docking.register({
+  id: 'inspector',
+  element: inspectorEl,
+  defaultZone: 'right',
+  dragHandle: inspectorEl,
+  resizeHandle: inspectorEl,
+});
 web.docking.dock('inspector', 'left');
 web.docking.float('inspector', { x: 120, y: 120 });
+void web.docking.popOut('inspector', { mode: 'auto' }); // PiP, else satellite
 const layout = web.docking.saveLayout(); // serializable workspace snapshot
 web.docking.loadLayout(layout);
+
+// --- Commands: registry, keybindings, palette ------------------------------
+web.commands.register({
+  id: 'editor.export',
+  label: 'Export Document',
+  category: 'Editor',
+  keybinding: 'Mod+Shift+E',
+  run: () => undefined,
+});
+const disposeKeys = web.commands.installKeybindings(); // binds Mod+Shift+P palette
+web.commands.openPalette({ placeholder: 'Run a command…' });
+disposeKeys();
+
+// --- Theme catalogue (tessel presets) --------------------------------------
+web.theme.set('nord');
+void web.theme.list().map((t) => t.id);
 
 // --- Target-agnostic library code -----------------------------------------
 // Code written against the wide `Rootstock` type must guard optional subsystems

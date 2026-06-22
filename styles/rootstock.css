@@ -133,6 +133,64 @@
   margin-bottom: 2px;
 }
 
+/* Command palette */
+.rootstock-palette-overlay {
+  align-items: flex-start;
+  padding-top: 12vh;
+}
+
+.rootstock-palette {
+  width: 560px;
+  max-width: 92vw;
+  background: var(--rs-surface);
+  color: var(--rs-text);
+  border: 1px solid var(--rs-border);
+  border-radius: var(--rs-radius);
+  box-shadow: var(--rs-shadow);
+  overflow: hidden;
+  font: 14px/1.5 system-ui, sans-serif;
+}
+
+.rootstock-palette-input {
+  width: 100%;
+  padding: 14px 16px;
+  border: none;
+  border-bottom: 1px solid var(--rs-border);
+  background: var(--rs-surface);
+  color: var(--rs-text);
+  font: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.rootstock-palette-list {
+  max-height: 50vh;
+  overflow-y: auto;
+}
+
+.rootstock-palette-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 16px;
+  cursor: pointer;
+}
+
+.rootstock-palette-item.active,
+.rootstock-palette-item:hover {
+  background: var(--rs-surface-elevated);
+}
+
+.rootstock-palette-kbd {
+  font: 11px/1 ui-monospace, monospace;
+  padding: 3px 6px;
+  border: 1px solid var(--rs-border);
+  border-radius: 4px;
+  color: var(--rs-text);
+  opacity: 0.7;
+}
+
 /* Docking — panes carry these classes; scions style the zone containers.
  * The float class is applied by the docking system; geometry is set inline. */
 .rootstock-pane-float {

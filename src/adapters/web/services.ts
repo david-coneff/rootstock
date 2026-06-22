@@ -5,6 +5,7 @@
 // installability), which the `pwa` entry layers on top.
 
 import type { ThemeDescriptor } from '../../core/services/theme.js';
+import { themeCatalogue, DEFAULT_THEME_ID } from '../../core/themes/catalogue.js';
 import {
   CommandRegistry,
   ThemeEngine,
@@ -25,25 +26,23 @@ export interface WebBuildOptions {
   settingsPrefix?: string;
 }
 
-export const DEFAULT_THEMES: ThemeDescriptor[] = [
-  { id: 'light', label: 'Light', dark: false },
-  { id: 'dark', label: 'Dark', dark: true },
-];
+export const DEFAULT_THEMES: ThemeDescriptor[] = themeCatalogue;
 
 /** The full browser service set, shared by `web` and `pwa`. */
 export function createWebServices(options: WebBuildOptions) {
   const fsSupported = WebFsService.isSupported();
   const settings = new LocalStorageSettings(options.settingsPrefix);
+  const windowService = new WebWindowService();
   return {
     fsSupported,
-    window: new WebWindowService(),
+    window: windowService,
     dialog: new DomDialogs(),
     notify: new DomNotifier(),
     clipboard: new NavigatorClipboard(),
     settings,
-    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme),
+    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme ?? DEFAULT_THEME_ID),
     commands: new CommandRegistry(),
-    docking: new DomDockingSystem({ settings }),
+    docking: new DomDockingSystem({ settings, window: windowService }),
     fs: fsSupported ? new WebFsService() : null,
   };
 }

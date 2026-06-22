@@ -151,20 +151,48 @@ bottom/center`), a floating rect, or a pop-out window — serializes that to a
 `WorkspaceLayout`, and auto-persists it through `settings`:
 
 ```ts
-rootstock.docking.configure({ zones: { left: leftEl, right: rightEl } });
-rootstock.docking.register({ id: 'inspector', element: el, defaultZone: 'right' });
-rootstock.docking.dock('inspector', 'left');
-await rootstock.docking.popOut('inspector');   // Document Picture-in-Picture
-rootstock.docking.restorePersisted();           // reapply saved layout
+rootstock.docking.configure({ zones: { left: leftEl, right: rightEl }, topOffset: 44 });
+rootstock.docking.register({
+  id: 'inspector', element: el, defaultZone: 'right',
+  dragHandle: headerEl, resizeHandle: gripEl,   // draggable + resizable when floating
+});
+rootstock.docking.float('inspector', { x: 120, y: 120 });
+await rootstock.docking.popOut('inspector', { mode: 'auto' }); // PiP, else satellite window
+rootstock.docking.restorePersisted();                          // reapply saved layout
 ```
 
-The state core (registry, dock/float/pop-out transitions, serialize/restore,
-persistence) is implemented; tessel's `FloatingPane` drag/resize/splitters and
-URL-satellite pop-out are the next behaviors to lift in behind this interface.
+Floating drag/resize (lifted from tessel's `FloatingPane`) and both pop-out
+paths are implemented: Document Picture-in-Picture, and a URL-`satellite` window
+(via the target's window service — `window.open` on web, `WebviewWindow` on
+Tauri) that the scion re-renders using `readSatelliteRequest()`. Splitters and
+tabbed pane groups are the remaining lifts.
+
+## Commands, palette & keybindings
+
+`rootstock.commands` is a registry, a command palette, and a portable
+keybinding engine (Mod = Cmd on macOS, Ctrl elsewhere):
+
+```ts
+rootstock.commands.register({
+  id: 'editor.export', label: 'Export', category: 'Editor',
+  keybinding: 'Mod+Shift+E', run: () => exportDoc(),
+});
+const dispose = rootstock.commands.installKeybindings(); // + Mod+Shift+P palette
+rootstock.commands.openPalette();
+```
+
+## Themes
+
+`rootstock.theme` ships tessel's six-preset catalogue (`themeCatalogue`: dark,
+light, nord, solarized-dark, warm-light, high-contrast). Each theme carries its
+full CSS-variable map and also maps rootstock's own `--rs-*` chrome tokens, so
+the framework's dialogs/toasts/palette theme in step with the app. Scions can
+pass their own catalogue to `createWebRootstock({ themes })`.
 
 ## Status
 
-Early scaffold. The capability **contract**, the **web / pwa / tauri adapters**,
-and the **docking state core** are in place and type-checked. Remaining lifts
-from tessel: floating-pane drag/resize, command-palette UI, menus, and richer
-theme catalogues.
+The capability **contract**, the **web / pwa / tauri adapters**, the **docking
+subsystem** (zones, floating drag/resize, PiP + satellite pop-out, layout
+persistence), the **command palette + keybindings**, and the **theme catalogue**
+are in place and type-checked. Remaining lifts from tessel: dock splitters /
+tabbed groups, application menus, and custom/user theme editing.

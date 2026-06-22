@@ -33,6 +33,13 @@ export interface PanelDescriptor {
   title?: string;
   /** Placement used when no saved state exists. Defaults to 'left'. */
   defaultZone?: DockZone;
+  /** Element that initiates drag while floating (e.g. the pane header). */
+  dragHandle?: HTMLElement;
+  /** Element that initiates resize while floating (e.g. a corner grip). */
+  resizeHandle?: HTMLElement;
+  /** Minimum floating size, in px. */
+  minWidth?: number;
+  minHeight?: number;
 }
 
 /** A serializable snapshot of the whole workspace. */
@@ -45,6 +52,23 @@ export interface WorkspaceLayout {
 export interface DockingConfig {
   /** Map of zone → container element the panes are docked into. */
   zones: Partial<Record<DockZone, HTMLElement>>;
+  /** Pixels reserved at the top (e.g. a toolbar) that floats won't overlap. */
+  topOffset?: number;
+}
+
+/**
+ * How a pane detaches into its own window.
+ * - `pip`: Document Picture-in-Picture (moves the live element; same process).
+ * - `satellite`: a new window/WebviewWindow at the app URL + a marker param,
+ *   which re-renders the panel (capability `popoutWindows`).
+ * - `auto` (default): PiP when available, else satellite.
+ */
+export type PopOutMode = 'auto' | 'pip' | 'satellite';
+
+export interface PopOutOptions {
+  mode?: PopOutMode;
+  width?: number;
+  height?: number;
 }
 
 export interface DockingService {
@@ -57,11 +81,10 @@ export interface DockingService {
   dock(id: string, zone: DockZone): void;
   float(id: string, rect?: Partial<FloatRect>): void;
   /**
-   * Detach a pane into its own window via Document Picture-in-Picture.
-   * Requires the `popoutWindows` capability; throws {@link CapabilityError}
-   * when no pop-out mechanism is available.
+   * Detach a pane into its own window (see {@link PopOutOptions} for modes).
+   * Throws {@link CapabilityError} when no pop-out mechanism is available.
    */
-  popOut(id: string): Promise<void>;
+  popOut(id: string, opts?: PopOutOptions): Promise<void>;
   /** Return a floating/popped-out pane to its last docked zone. */
   dockBack(id: string): void;
 

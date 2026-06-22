@@ -49,5 +49,23 @@ export class ThemeEngine implements ThemeService {
     const root = document.documentElement;
     root.setAttribute('data-theme', id);
     root.classList.toggle('dark', !!theme?.dark);
+    this.applyVars(theme?.vars);
+  }
+
+  private applyVars(vars?: Readonly<Record<string, string>>): void {
+    let style = document.getElementById('rootstock-theme-vars') as HTMLStyleElement | null;
+    if (!vars) {
+      if (style) style.textContent = '';
+      return;
+    }
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'rootstock-theme-vars';
+      document.head.appendChild(style);
+    }
+    const body = Object.entries(vars)
+      .map(([k, v]) => `  ${k}: ${v};`)
+      .join('\n');
+    style.textContent = `:root {\n${body}\n}`;
   }
 }

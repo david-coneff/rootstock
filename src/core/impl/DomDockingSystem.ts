@@ -1,5 +1,7 @@
 import { CapabilityError } from '../errors.js';
 import type { SettingsService } from '../services/settings.js';
+import type { WindowService } from '../services/window.js';
+import { buildSatelliteUrl } from '../docking-satellite.js';
 import type {
   DockZone,
   DockingConfig,
@@ -7,6 +9,7 @@ import type {
   FloatRect,
   PaneState,
   PanelDescriptor,
+  PopOutOptions,
   WorkspaceLayout,
 } from '../services/docking.js';
 
@@ -26,6 +29,8 @@ interface Registered {
   /** Zone to return to on dockBack. */
   lastZone: DockZone;
   pipWindow?: Window | null;
+  /** Drag/resize handlers wired once, lazily, the first time the pane floats. */
+  interactionsWired?: boolean;
 }
 
 export interface DomDockingOptions {
@@ -33,6 +38,8 @@ export interface DomDockingOptions {
   settings?: SettingsService;
   /** Settings key for the persisted layout. */
   persistKey?: string;
+  /** Window service used for satellite pop-out (a new window at the app URL). */
+  window?: WindowService;
 }
 
 /**
@@ -49,14 +56,18 @@ export class DomDockingSystem implements DockingService {
   private readonly listeners = new Set<(layout: WorkspaceLayout) => void>();
   private readonly settings?: SettingsService;
   private readonly persistKey: string;
+  private readonly windowService?: WindowService;
+  private topOffset = 0;
 
   constructor(opts: DomDockingOptions = {}) {
     this.settings = opts.settings;
     this.persistKey = opts.persistKey ?? 'workspace-layout';
+    this.windowService = opts.window;
   }
 
   configure(config: DockingConfig): void {
     this.zones = { ...config.zones };
+    this.topOffset = config.topOffset ?? 0;
     // Re-place any panels registered before configuration.
     for (const [id, p] of this.panels) {
       if (p.state.mode === 'docked') this.placeDocked(id, p.state.zone);
@@ -103,31 +114,65 @@ export class DomDockingSystem implements DockingService {
     el.style.width = `${r.width}px`;
     el.style.height = `${r.height}px`;
     if (typeof document !== 'undefined') document.body.appendChild(el);
+    this.wireInteractions(p);
     this.changed();
   }
 
-  async popOut(id: string): Promise<void> {
+  async popOut(id: string, opts: PopOutOptions = {}): Promise<void> {
     const p = this.require(id);
-    const pip =
-      typeof window !== 'undefined'
-        ? (window as unknown as { documentPictureInPicture?: PictureInPicture }).documentPictureInPicture
-        : undefined;
-    if (!pip || typeof pip.requestWindow !== 'function') {
+    const mode = opts.mode ?? 'auto';
+    const usePip = (mode === 'auto' || mode === 'pip') && pipApi() !== undefined;
+
+    if (mode === 'pip' && !usePip) {
       throw new CapabilityError('popoutWindows', 'Document Picture-in-Picture is unavailable');
     }
+    if (usePip) {
+      await this.popOutPip(p, opts);
+    } else {
+      await this.popOutSatellite(p, opts);
+    }
+  }
 
+  private async popOutPip(p: Registered, opts: PopOutOptions): Promise<void> {
+    const pip = pipApi();
+    if (!pip) throw new CapabilityError('popoutWindows', 'Picture-in-Picture unavailable');
     const el = p.descriptor.element;
     const rect = el.getBoundingClientRect();
     const pipWin = await pip.requestWindow({
-      width: Math.round(rect.width) || DEFAULT_FLOAT.width,
-      height: Math.round(rect.height) || DEFAULT_FLOAT.height,
+      width: opts.width ?? (Math.round(rect.width) || DEFAULT_FLOAT.width),
+      height: opts.height ?? (Math.round(rect.height) || DEFAULT_FLOAT.height),
     });
     copyStyles(pipWin);
     pipWin.document.body.appendChild(el);
     p.pipWindow = pipWin;
     p.state = { mode: 'popped-out' };
-    pipWin.addEventListener('pagehide', () => this.dockBack(id));
+    pipWin.addEventListener('pagehide', () => this.dockBack(p.descriptor.id));
     this.changed();
+  }
+
+  private async popOutSatellite(p: Registered, opts: PopOutOptions): Promise<void> {
+    if (!this.windowService) {
+      throw new CapabilityError('popoutWindows', 'no window service for satellite pop-out');
+    }
+    const el = p.descriptor.element;
+    const rect = el.getBoundingClientRect();
+    const id = p.descriptor.id;
+    // Hide the in-place pane while the satellite renders its own copy.
+    el.style.visibility = 'hidden';
+    try {
+      await this.windowService.create({
+        id: `satellite-${id}`,
+        title: p.descriptor.title ?? id,
+        url: buildSatelliteUrl(id),
+        width: opts.width ?? (Math.round(rect.width) || DEFAULT_FLOAT.width),
+        height: opts.height ?? (Math.round(rect.height) || DEFAULT_FLOAT.height),
+      });
+      p.state = { mode: 'popped-out' };
+      this.changed();
+    } catch (e) {
+      el.style.visibility = '';
+      throw e;
+    }
   }
 
   dockBack(id: string): void {
@@ -198,6 +243,7 @@ export class DomDockingSystem implements DockingService {
     el.style.top = '';
     el.style.width = '';
     el.style.height = '';
+    el.style.visibility = '';
   }
 
   private changed(): void {
@@ -205,6 +251,97 @@ export class DomDockingSystem implements DockingService {
     this.settings?.set(this.persistKey, layout);
     for (const l of this.listeners) l(layout);
   }
+
+  // --- floating drag/resize (lifted from tessel's FloatingPane) -----------
+
+  private wireInteractions(p: Registered): void {
+    if (p.interactionsWired) return;
+    const { dragHandle, resizeHandle, element } = p.descriptor;
+    if (dragHandle) this.setupDrag(p, dragHandle, element);
+    if (resizeHandle) this.setupResize(p, resizeHandle, element);
+    p.interactionsWired = true;
+  }
+
+  private setupDrag(p: Registered, handle: HTMLElement, el: HTMLElement): void {
+    handle.addEventListener('mousedown', (e: MouseEvent) => {
+      if (p.state.mode !== 'floating') return;
+      const rect = el.getBoundingClientRect();
+      const offX = e.clientX - rect.left;
+      const offY = e.clientY - rect.top;
+      const onMove = (ev: MouseEvent) => {
+        const pos = this.clamp(el, ev.clientX - offX, ev.clientY - offY);
+        el.style.left = `${pos.x}px`;
+        el.style.top = `${pos.y}px`;
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        this.commitRect(p);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      e.preventDefault();
+    });
+  }
+
+  private setupResize(p: Registered, handle: HTMLElement, el: HTMLElement): void {
+    const minW = p.descriptor.minWidth ?? 160;
+    const minH = p.descriptor.minHeight ?? 120;
+    handle.addEventListener('mousedown', (e: MouseEvent) => {
+      if (p.state.mode !== 'floating') return;
+      e.preventDefault();
+      e.stopPropagation();
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const startW = el.offsetWidth;
+      const startH = el.offsetHeight;
+      const onMove = (ev: MouseEvent) => {
+        el.style.width = `${Math.max(minW, startW + ev.clientX - startX)}px`;
+        el.style.height = `${Math.max(minH, startH + ev.clientY - startY)}px`;
+      };
+      const onUp = () => {
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        this.commitRect(p);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+    });
+  }
+
+  private commitRect(p: Registered): void {
+    if (p.state.mode !== 'floating') return;
+    const el = p.descriptor.element;
+    p.state = {
+      mode: 'floating',
+      rect: {
+        x: parseFloat(el.style.left) || 0,
+        y: parseFloat(el.style.top) || 0,
+        width: el.offsetWidth,
+        height: el.offsetHeight,
+      },
+    };
+    this.changed();
+  }
+
+  /** Clamp a position so the pane stays within the viewport, below topOffset. */
+  private clamp(el: HTMLElement, x: number, y: number): { x: number; y: number } {
+    const w = el.offsetWidth;
+    const h = el.offsetHeight;
+    const vw = typeof window !== 'undefined' ? window.innerWidth : w;
+    const vh = typeof window !== 'undefined' ? window.innerHeight : h;
+    return {
+      x: Math.max(0, Math.min(vw - w, x)),
+      y: Math.max(this.topOffset, Math.min(vh - h, y)),
+    };
+  }
+}
+
+function pipApi(): PictureInPicture | undefined {
+  if (typeof window === 'undefined') return undefined;
+  const api = (window as unknown as { documentPictureInPicture?: PictureInPicture })
+    .documentPictureInPicture;
+  return api && typeof api.requestWindow === 'function' ? api : undefined;
 }
 
 interface PictureInPicture {

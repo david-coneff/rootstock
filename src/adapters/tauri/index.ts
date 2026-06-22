@@ -18,6 +18,7 @@ import {
   NavigatorClipboard,
   DomDockingSystem,
 } from '../../core/impl/index.js';
+import { themeCatalogue, DEFAULT_THEME_ID } from '../../core/themes/catalogue.js';
 import { TauriWindowService } from './TauriWindowService.js';
 import { TauriFsService } from './TauriFsService.js';
 import { TauriShellService } from './TauriShellService.js';
@@ -28,10 +29,7 @@ export interface TauriRootstockOptions {
   settingsPrefix?: string;
 }
 
-const DEFAULT_THEMES: ThemeDescriptor[] = [
-  { id: 'light', label: 'Light', dark: false },
-  { id: 'dark', label: 'Dark', dark: true },
-];
+const DEFAULT_THEMES: ThemeDescriptor[] = themeCatalogue;
 
 /**
  * The Tauri runtime surface. `fs` and `shell` are non-null here, so a Tauri
@@ -61,18 +59,19 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
   // `satisfies` keeps the non-null `fs`/`shell` types so the Tauri surface
   // exposes them without a guard.
   const settings = new LocalStorageSettings(options.settingsPrefix);
+  const windowService = new TauriWindowService();
   const adapter = {
     target: 'tauri' as const,
     capabilities,
-    window: new TauriWindowService(),
+    window: windowService,
     // Reused from the shared layer — they run unchanged in the webview.
     dialog: new DomDialogs(),
     notify: new DomNotifier(),
     clipboard: new NavigatorClipboard(),
     settings,
-    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme),
+    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme ?? DEFAULT_THEME_ID),
     commands: new CommandRegistry(),
-    docking: new DomDockingSystem({ settings }),
+    docking: new DomDockingSystem({ settings, window: windowService }),
     // Native, capability-backed subsystems.
     fs: new TauriFsService(),
     shell: new TauriShellService(),

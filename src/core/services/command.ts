@@ -21,6 +21,17 @@ export interface Command {
   isEnabled?(): boolean;
 }
 
+export interface CommandPaletteOptions {
+  placeholder?: string;
+}
+
+export interface KeybindingOptions {
+  /** Where to listen for keystrokes. Defaults to `document`. */
+  target?: Document | HTMLElement;
+  /** Hotkey to open the palette; pass null to disable. Default 'Mod+Shift+P'. */
+  paletteKeybinding?: string | null;
+}
+
 export interface CommandService {
   /** Register a command. Returns a disposer that unregisters it. */
   register(command: Command): () => void;
@@ -28,4 +39,14 @@ export interface CommandService {
   execute(id: string, ...args: unknown[]): Promise<unknown>;
   /** All registered commands (palette source). */
   list(): ReadonlyArray<Omit<Command, 'run'>>;
+
+  /** Open the command palette (filterable list of commands). */
+  openPalette(options?: CommandPaletteOptions): void;
+  /** Close the command palette if open. */
+  closePalette(): void;
+  /**
+   * Bind registered commands' keybindings (and the palette hotkey) to a target.
+   * Returns a disposer that removes the listener.
+   */
+  installKeybindings(options?: KeybindingOptions): () => void;
 }
