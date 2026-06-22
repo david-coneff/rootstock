@@ -181,18 +181,37 @@ const dispose = rootstock.commands.installKeybindings(); // + Mod+Shift+P palett
 rootstock.commands.openPalette();
 ```
 
+## Menus
+
+`rootstock.menus` renders menubars, dropdowns, and context menus from a
+declarative model whose leaf items dispatch through the command system:
+
+```ts
+rootstock.menus.setMenuBar(barEl, [
+  { label: 'File', items: [
+    { label: 'Export', command: 'editor.export', keybinding: 'Mod+Shift+E' },
+    { separator: true },
+    { label: 'Recent', submenu: [/* … */] },
+  ]},
+]);
+rootstock.menus.openContextMenu(items, x, y);
+```
+
 ## Themes
 
 `rootstock.theme` ships tessel's six-preset catalogue (`themeCatalogue`: dark,
 light, nord, solarized-dark, warm-light, high-contrast). Each theme carries its
 full CSS-variable map and also maps rootstock's own `--rs-*` chrome tokens, so
-the framework's dialogs/toasts/palette theme in step with the app. Scions can
-pass their own catalogue to `createWebRootstock({ themes })`.
+the framework's dialogs/toasts/palette theme in step with the app. It also
+supports user editing — `register()`/`remove()` custom themes, `setOrder()`,
+and tessel's A/B toggle (`setSlot`, `toggleSlot`, `preview`/`endPreview`) — all
+persisted through settings.
 
 ## Status
 
 The capability **contract**, the **web / pwa / tauri adapters**, the **docking
-subsystem** (zones, floating drag/resize, PiP + satellite pop-out, layout
-persistence), the **command palette + keybindings**, and the **theme catalogue**
-are in place and type-checked. Remaining lifts from tessel: dock splitters /
-tabbed groups, application menus, and custom/user theme editing.
+subsystem** (zones, floating drag/resize, tabbed pane groups, splitters, PiP +
+satellite pop-out, layout persistence), the **command palette + keybindings**,
+**menus**, and the **theme engine** (catalogue + user editing + A/B slots) are
+in place and type-checked. The contract surface is broad enough for a real scion
+to adopt — tessel is the first consumer.

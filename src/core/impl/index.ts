@@ -5,3 +5,5 @@ export { DomDialogs } from './DomDialogs.js';
 export { DomNotifier } from './DomNotifier.js';
 export { NavigatorClipboard } from './NavigatorClipboard.js';
 export { DomDockingSystem } from './DomDockingSystem.js';
+export { Splitter } from './Splitter.js';
+export { DomMenus } from './DomMenus.js';

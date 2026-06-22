@@ -10,6 +10,7 @@
 import { createWebRootstock } from '../src/adapters/web/index.js';
 import { createPwaRootstock } from '../src/adapters/pwa/index.js';
 import { createTauriRootstock } from '../src/adapters/tauri/index.js';
+import { Splitter } from '../src/index.js';
 import type { Rootstock } from '../src/index.js';
 
 // --- Web build -------------------------------------------------------------
@@ -64,8 +65,15 @@ web.docking.register({
 web.docking.dock('inspector', 'left');
 web.docking.float('inspector', { x: 120, y: 120 });
 void web.docking.popOut('inspector', { mode: 'auto' }); // PiP, else satellite
+web.docking.groupAsTabs('side', ['inspector'], 'left'); // tabbed pane group
+web.docking.activateTab('side', 'inspector');
 const layout = web.docking.saveLayout(); // serializable workspace snapshot
 web.docking.loadLayout(layout);
+
+// A resizable splitter (zone divider / pane grip)
+const handleEl =
+  typeof document !== 'undefined' ? document.createElement('div') : ({} as HTMLElement);
+new Splitter(handleEl, { target: inspectorEl, axis: 'horizontal', min: 160, max: 600 });
 
 // --- Commands: registry, keybindings, palette ------------------------------
 web.commands.register({
@@ -79,9 +87,30 @@ const disposeKeys = web.commands.installKeybindings(); // binds Mod+Shift+P pale
 web.commands.openPalette({ placeholder: 'Run a command…' });
 disposeKeys();
 
-// --- Theme catalogue (tessel presets) --------------------------------------
+// --- Menus: menubar + context menu, dispatching commands -------------------
+const barEl =
+  typeof document !== 'undefined' ? document.createElement('div') : ({} as HTMLElement);
+web.menus.setMenuBar(barEl, [
+  {
+    label: 'File',
+    items: [
+      { label: 'Export', command: 'editor.export', keybinding: 'Mod+Shift+E' },
+      { separator: true },
+      { label: 'More', submenu: [{ label: 'Nested', action: () => undefined }] },
+    ],
+  },
+]);
+web.menus.openContextMenu([{ label: 'Copy', action: () => undefined }], 10, 10);
+
+// --- Theme catalogue + user editing + A/B slots ----------------------------
 web.theme.set('nord');
 void web.theme.list().map((t) => t.id);
+web.theme.register({ id: 'mine', label: 'Mine', dark: true, vars: { '--rs-accent': '#f0f' } });
+web.theme.setSlot('a', 'dark');
+web.theme.setSlot('b', 'light');
+web.theme.toggleSlot(); // switch a↔b
+web.theme.preview('nord');
+web.theme.endPreview();
 
 // --- Target-agnostic library code -----------------------------------------
 // Code written against the wide `Rootstock` type must guard optional subsystems

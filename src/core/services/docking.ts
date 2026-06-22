@@ -42,10 +42,19 @@ export interface PanelDescriptor {
   minHeight?: number;
 }
 
+/** A group of panes stacked as tabs within a zone. */
+export interface TabGroupState {
+  id: string;
+  zone: DockZone;
+  paneIds: string[];
+  active: string;
+}
+
 /** A serializable snapshot of the whole workspace. */
 export interface WorkspaceLayout {
   version: 1;
   panes: Record<string, PaneState>;
+  tabGroups?: TabGroupState[];
 }
 
 /** Runtime wiring supplied by the scion (the zone containers in its DOM). */
@@ -87,6 +96,13 @@ export interface DockingService {
   popOut(id: string, opts?: PopOutOptions): Promise<void>;
   /** Return a floating/popped-out pane to its last docked zone. */
   dockBack(id: string): void;
+
+  /** Stack the given panes as tabs within a zone. */
+  groupAsTabs(groupId: string, paneIds: string[], zone: DockZone): void;
+  /** Show a specific tab within a group. */
+  activateTab(groupId: string, paneId: string): void;
+  /** Dissolve a tab group, returning its panes to the zone. */
+  ungroup(groupId: string): void;
 
   state(id: string): PaneState | undefined;
 

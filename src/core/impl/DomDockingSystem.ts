@@ -10,6 +10,7 @@ import type {
   PaneState,
   PanelDescriptor,
   PopOutOptions,
+  TabGroupState,
   WorkspaceLayout,
 } from '../services/docking.js';
 
@@ -31,6 +32,18 @@ interface Registered {
   pipWindow?: Window | null;
   /** Drag/resize handlers wired once, lazily, the first time the pane floats. */
   interactionsWired?: boolean;
+  /** Tab group this pane belongs to, if any. */
+  groupId?: string;
+}
+
+interface TabGroup {
+  id: string;
+  zone: DockZone;
+  paneIds: string[];
+  active: string;
+  container: HTMLElement;
+  strip: HTMLElement;
+  body: HTMLElement;
 }
 
 export interface DomDockingOptions {
@@ -53,6 +66,7 @@ export interface DomDockingOptions {
 export class DomDockingSystem implements DockingService {
   private zones: Partial<Record<DockZone, HTMLElement>> = {};
   private readonly panels = new Map<string, Registered>();
+  private readonly groups = new Map<string, TabGroup>();
   private readonly listeners = new Set<(layout: WorkspaceLayout) => void>();
   private readonly settings?: SettingsService;
   private readonly persistKey: string;
@@ -188,23 +202,111 @@ export class DomDockingSystem implements DockingService {
     this.dock(id, p.lastZone);
   }
 
+  groupAsTabs(groupId: string, paneIds: string[], zone: DockZone): void {
+    if (typeof document === 'undefined' || paneIds.length === 0) return;
+    this.ungroup(groupId);
+
+    const container = document.createElement('div');
+    container.className = 'rootstock-tabgroup';
+    const strip = document.createElement('div');
+    strip.className = 'rootstock-tabstrip';
+    const body = document.createElement('div');
+    body.className = 'rootstock-tabbody';
+    container.append(strip, body);
+    this.zones[zone]?.appendChild(container);
+
+    const group: TabGroup = { id: groupId, zone, paneIds: [...paneIds], active: paneIds[0], container, strip, body };
+    this.groups.set(groupId, group);
+
+    for (const id of paneIds) {
+      const p = this.panels.get(id);
+      if (!p) continue;
+      this.clearFloat(p);
+      p.groupId = groupId;
+      p.state = { mode: 'docked', zone };
+      p.lastZone = zone;
+      body.appendChild(p.descriptor.element);
+    }
+    this.renderTabs(group);
+    this.activateTab(groupId, group.active);
+    this.changed();
+  }
+
+  activateTab(groupId: string, paneId: string): void {
+    const group = this.groups.get(groupId);
+    if (!group || !group.paneIds.includes(paneId)) return;
+    group.active = paneId;
+    for (const id of group.paneIds) {
+      const p = this.panels.get(id);
+      if (p) p.descriptor.element.style.display = id === paneId ? '' : 'none';
+    }
+    for (const btn of Array.from(group.strip.children)) {
+      btn.classList.toggle('active', (btn as HTMLElement).dataset.paneId === paneId);
+    }
+    this.changed();
+  }
+
+  ungroup(groupId: string): void {
+    const group = this.groups.get(groupId);
+    if (!group) return;
+    for (const id of group.paneIds) {
+      const p = this.panels.get(id);
+      if (!p) continue;
+      p.groupId = undefined;
+      p.descriptor.element.style.display = '';
+      this.placeDocked(id, group.zone);
+    }
+    group.container.remove();
+    this.groups.delete(groupId);
+    this.changed();
+  }
+
   state(id: string): PaneState | undefined {
     return this.panels.get(id)?.state;
+  }
+
+  private renderTabs(group: TabGroup): void {
+    group.strip.replaceChildren();
+    for (const id of group.paneIds) {
+      const p = this.panels.get(id);
+      const btn = document.createElement('button');
+      btn.className = 'rootstock-tab';
+      btn.dataset.paneId = id;
+      btn.textContent = p?.descriptor.title ?? id;
+      btn.addEventListener('click', () => this.activateTab(group.id, id));
+      group.strip.appendChild(btn);
+    }
   }
 
   saveLayout(): WorkspaceLayout {
     const panes: Record<string, PaneState> = {};
     for (const [id, p] of this.panels) panes[id] = p.state;
-    return { version: 1, panes };
+    const tabGroups: TabGroupState[] = [...this.groups.values()].map((g) => ({
+      id: g.id,
+      zone: g.zone,
+      paneIds: [...g.paneIds],
+      active: g.active,
+    }));
+    return tabGroups.length ? { version: 1, panes, tabGroups } : { version: 1, panes };
   }
 
   loadLayout(layout: WorkspaceLayout): void {
     if (!layout || layout.version !== 1) return;
+    const grouped = new Set<string>();
+    for (const g of layout.tabGroups ?? []) {
+      for (const id of g.paneIds) grouped.add(id);
+    }
     for (const [id, st] of Object.entries(layout.panes)) {
-      if (!this.panels.has(id)) continue;
+      if (!this.panels.has(id) || grouped.has(id)) continue;
       if (st.mode === 'docked') this.dock(id, st.zone);
       else if (st.mode === 'floating') this.float(id, st.rect);
       else if (st.mode === 'popped-out') void this.popOut(id).catch(() => undefined);
+    }
+    for (const g of layout.tabGroups ?? []) {
+      const present = g.paneIds.filter((id) => this.panels.has(id));
+      if (present.length === 0) continue;
+      this.groupAsTabs(g.id, present, g.zone);
+      if (present.includes(g.active)) this.activateTab(g.id, g.active);
     }
   }
 
@@ -231,7 +333,9 @@ export class DomDockingSystem implements DockingService {
     this.clearFloat(p);
     el.classList.remove(...ZONE_CLASSES);
     el.classList.add(`rootstock-dock-${zone}`);
-    const container = this.zones[zone];
+    // A grouped pane lives in its tab body, not directly in the zone.
+    const group = p.groupId ? this.groups.get(p.groupId) : undefined;
+    const container = group ? group.body : this.zones[zone];
     if (container) container.appendChild(el);
   }
 

@@ -14,6 +14,7 @@ import {
   DomNotifier,
   NavigatorClipboard,
   DomDockingSystem,
+  DomMenus,
 } from '../../core/impl/index.js';
 import { WebWindowService } from './WebWindowService.js';
 import { WebFsService } from './WebFsService.js';
@@ -33,6 +34,7 @@ export function createWebServices(options: WebBuildOptions) {
   const fsSupported = WebFsService.isSupported();
   const settings = new LocalStorageSettings(options.settingsPrefix);
   const windowService = new WebWindowService();
+  const commands = new CommandRegistry();
   return {
     fsSupported,
     window: windowService,
@@ -40,9 +42,13 @@ export function createWebServices(options: WebBuildOptions) {
     notify: new DomNotifier(),
     clipboard: new NavigatorClipboard(),
     settings,
-    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme ?? DEFAULT_THEME_ID),
-    commands: new CommandRegistry(),
+    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, {
+      initial: options.initialTheme ?? DEFAULT_THEME_ID,
+      settings,
+    }),
+    commands,
     docking: new DomDockingSystem({ settings, window: windowService }),
+    menus: new DomMenus(commands),
     fs: fsSupported ? new WebFsService() : null,
   };
 }

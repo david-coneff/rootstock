@@ -20,5 +20,7 @@ export { createRootstock } from './core/rootstock.js';
 export { detectTarget } from './core/detect.js';
 export { CapabilityError } from './core/errors.js';
 export { themeCatalogue, DEFAULT_THEME_ID } from './core/themes/catalogue.js';
-export { readSatelliteRequest } from './core/docking-satellite.js';
+export { readSatelliteRequest, buildSatelliteUrl } from './core/docking-satellite.js';
+export { Splitter } from './core/impl/Splitter.js';
+export type { SplitterOptions } from './core/impl/Splitter.js';
 export type { RootstockCore, RootstockFromAdapter } from './core/rootstock.js';

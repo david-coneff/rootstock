@@ -17,6 +17,7 @@ import {
   DomNotifier,
   NavigatorClipboard,
   DomDockingSystem,
+  DomMenus,
 } from '../../core/impl/index.js';
 import { themeCatalogue, DEFAULT_THEME_ID } from '../../core/themes/catalogue.js';
 import { TauriWindowService } from './TauriWindowService.js';
@@ -60,6 +61,7 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
   // exposes them without a guard.
   const settings = new LocalStorageSettings(options.settingsPrefix);
   const windowService = new TauriWindowService();
+  const commands = new CommandRegistry();
   const adapter = {
     target: 'tauri' as const,
     capabilities,
@@ -69,9 +71,13 @@ export function createTauriRootstock(options: TauriRootstockOptions = {}) {
     notify: new DomNotifier(),
     clipboard: new NavigatorClipboard(),
     settings,
-    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, options.initialTheme ?? DEFAULT_THEME_ID),
-    commands: new CommandRegistry(),
+    theme: new ThemeEngine(options.themes ?? DEFAULT_THEMES, {
+      initial: options.initialTheme ?? DEFAULT_THEME_ID,
+      settings,
+    }),
+    commands,
     docking: new DomDockingSystem({ settings, window: windowService }),
+    menus: new DomMenus(commands),
     // Native, capability-backed subsystems.
     fs: new TauriFsService(),
     shell: new TauriShellService(),

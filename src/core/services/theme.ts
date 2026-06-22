@@ -16,13 +16,38 @@ export interface ThemeDescriptor {
   readonly vars?: Readonly<Record<string, string>>;
 }
 
+/** The two-theme toggle slots (e.g. a dark/light pair), lifted from tessel. */
+export type ThemeSlot = 'a' | 'b';
+
 export interface ThemeService {
-  /** The currently active theme id. */
+  /** The currently active theme id (the previewed one while previewing). */
   current(): string;
-  /** All themes registered with the engine. */
+  /** All themes (built-in + custom), in the user's saved order. */
   list(): ThemeDescriptor[];
   /** Activate a theme by id. */
   set(id: string): void;
   /** Subscribe to theme changes. Returns an unsubscribe function. */
   onChange(listener: (theme: ThemeDescriptor) => void): () => void;
+
+  // --- user theme editing (persisted) -------------------------------------
+  /** Add or replace a custom theme (persisted). */
+  register(theme: ThemeDescriptor): void;
+  /** Remove a custom theme by id (built-ins cannot be removed). */
+  remove(id: string): void;
+  /** Persist a custom display order for `list()`. */
+  setOrder(ids: string[]): void;
+
+  // --- A/B slots ----------------------------------------------------------
+  /** The theme id assigned to a slot. */
+  slot(slot: ThemeSlot): string;
+  /** Assign a theme to a slot (applies immediately if it's the active slot). */
+  setSlot(slot: ThemeSlot, id: string): void;
+  /** Which slot is currently active. */
+  activeSlot(): ThemeSlot;
+  /** Switch the active slot (a↔b) and apply its theme. */
+  toggleSlot(): void;
+  /** Temporarily apply a theme without changing slots (e.g. hover preview). */
+  preview(id: string): void;
+  /** End a preview, reverting to the active slot's theme. */
+  endPreview(): void;
 }
