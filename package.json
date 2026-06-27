@@ -36,6 +36,8 @@
   ],
   "scripts": {
     "build": "tsup",
+    "build:demo": "node build.mjs",
+    "dev:demo": "node build.mjs --watch",
     "typecheck": "tsc --noEmit",
     "dev": "tsup --watch",
     "prepare": "tsup",
@@ -43,6 +45,7 @@
   },
   "devDependencies": {
     "@tauri-apps/api": "^2.0.0",
+    "esbuild": "^0.24.0",
     "tsup": "^8.0.0",
     "typescript": "^5.4.0"
   },

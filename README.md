@@ -141,7 +141,20 @@ examples/               compile-time proof of the capability contract
 npm install
 npm run typecheck   # tsc --noEmit (includes the contract proof)
 npm run build       # tsup → dist/ (per-target ESM + .d.ts)
+npm run build:demo  # esbuild → examples/playground.html (single-file demo)
 ```
+
+### Playground demo (the "core HTML")
+
+`npm run build:demo` runs `node build.mjs`: esbuild rolls the modular
+`examples/playground/` source (TS + CSS) up into one self-contained
+**`examples/playground.html`** that boots `rootstock/web` from `file://` with
+zero network — a *runtime* proof to complement the *compile-time* proof in
+`examples/capability-contract.ts`. It is the same single-file esbuild roll-up
+the scion apps (docket, tessel) use, so every project under this stack shares
+one build process (rhiz-Partition modality B / DS-002). The library packaging
+above (tsup → `dist/`) is unaffected; `playground.html` is a generated output,
+only `examples/playground/` is source.
 
 ## Docking
 
