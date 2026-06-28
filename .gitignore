@@ -4,3 +4,7 @@ dist/
 .DS_Store
 npm-debug.log*
 examples/.build/
+
+# rhiz tooling channel — gitignored: resolved tools cache + generated search index
+.rhiz-tools/
+.rhiz-search/

@@ -69,5 +69,5 @@ The docs that describe rootstock, all discoverable from this entry point:
 | Documentation | `README.md`, `docs/` |
 | Contracts | The capability contract (`src/core/adapter.ts`, `src/core/rootstock.ts`); compile-time proof in `examples/capability-contract.ts` |
 | Testing | `npm run typecheck` (the contract proof is type-checked) |
-| Dependencies | `package.json` (tsup, esbuild; optional `@material/web` peer); rhizome `tools/rhiz-lint.py` |
-| Oversight | rhizome `tools/rhiz-lint.py` (knowledge-base linkage integrity) |
+| Dependencies | `package.json` (tsup, esbuild; optional `@material/web` peer); rhiz tooling run via `tools/rhiz` against the rhizome `tools-stable` channel (rhiz-lint/rhiz-search/doc-graph live in rhizome, not copied here) |
+| Oversight | rhiz-lint (knowledge-base linkage integrity), run via `tools/rhiz` against the rhizome `tools-stable` channel |
