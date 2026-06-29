@@ -55,7 +55,10 @@ The docs that describe rootstock, all discoverable from this entry point:
 - [docs/FOUNDING.md](../docs/FOUNDING.md) — full vision, problem statement, philosophy, design goals
 - [docs/COMPONENTS.md](../docs/COMPONENTS.md) — the framework-agnostic web components (`<rs-*>`) and their theming
 - [docs/PENPOT_WORKFLOW.md](../docs/PENPOT_WORKFLOW.md) — design → specify → implement workflow for those components in Penpot
+- [docs/PENPOT_SELFHOST.md](../docs/PENPOT_SELFHOST.md) — stand up a local self-hosted Penpot + the component-compatibility validation loop
 - [docs/adr/0001-typescript-and-capability-contract.md](../docs/adr/0001-typescript-and-capability-contract.md) — why TypeScript + a per-target capability contract
+- [docs/adr/0002-authoring-ide-boundary-penpot.md](../docs/adr/0002-authoring-ide-boundary-penpot.md) — the authoring-IDE boundary: Penpot is the design surface; rootstock is parts + runtime
+- [rhiz-memory/roadmap/index.md](roadmap/index.md) — forward plan, incl. the [general roadmap](roadmap/rootstock-roadmap.md)
 
 ---
 
@@ -64,7 +67,8 @@ The docs that describe rootstock, all discoverable from this entry point:
 | Category | Location |
 |---|---|
 | Governance | `rhiz-memory/_instance.md` (this file) |
-| Decisions | `docs/adr/` (architecture decision records) |
+| Decisions | `docs/adr/` (architecture decision records — ADR 0001 contract, ADR 0002 authoring-IDE boundary) |
+| Planning | [`rhiz-memory/roadmap/`](roadmap/index.md) — the general roadmap |
 | State | `rhiz-memory/state/SESSION_HANDOFF.md` (create when needed) |
 | Documentation | `README.md`, `docs/` |
 | Contracts | The capability contract (`src/core/adapter.ts`, `src/core/rootstock.ts`); compile-time proof in `examples/capability-contract.ts` |

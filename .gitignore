@@ -8,3 +8,6 @@ examples/.build/
 # rhiz tooling channel — gitignored: resolved tools cache + generated search index
 .rhiz-tools/
 .rhiz-search/
+
+# Local self-hosted Penpot: downloaded official compose + its data (not vendored)
+tools/penpot/.run/
